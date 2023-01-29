@@ -20,20 +20,9 @@ all_users_order_count as (
 				end as all_users_order_sum
 			from analysis.users
 			left join user_order_count
-			on users.id = user_order_count.user_id),
-sorted as (
-	select
-			id,
-			ROW_NUMBER() OVER(ORDER BY all_users_order_sum desc) num
-	from all_users_order_count)
-insert into analysis.tmp_rfm_frequency 
+			on users.id = user_order_count.user_id)
+insert into analysis.tmp_rfm_frequency
 select
-	id as user_id,
-	case 
-		when num > 0 and num <= 200 then 5
-		when num > 200 and num <= 400 then 4
-		when num > 400 and num <= 600 then 3
-		when num > 600 and num <= 800 then 2
-		when num > 800 and num <= 1000 then 1
-	end as frequency 
-from sorted
+	id,
+	NTILE(5) OVER(ORDER BY all_users_order_sum asc) frequency
+from all_users_order_count

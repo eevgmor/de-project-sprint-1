@@ -15,14 +15,17 @@ user_last_order as (
 all_users_last_order as (
 			select
 				users.id,
-				user_last_order.last_order_dt
+				case
+					when user_last_order.last_order_dt is null then (select min(last_order_dt) from user_last_order) 
+					else user_last_order.last_order_dt
+				end as last_order_dt			
 			from analysis.users
 			left join user_last_order
 			on users.id = user_last_order.user_id),
 sorted as (
 			select
 				id,
-				ROW_NUMBER() OVER(ORDER BY last_order_dt asc) num
+				ROW_NUMBER() OVER(ORDER BY last_order_dt desc) num
 			from all_users_last_order)
 insert into analysis.tmp_rfm_recency 
 select
